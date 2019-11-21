@@ -66,7 +66,7 @@ begin
     p_reset: process
     begin
         s_reset_i <= '1';
-        wait for 50 ns;
+        wait for 500000 ns;
         s_reset_i <= '0';
         wait;
     end process p_reset;
