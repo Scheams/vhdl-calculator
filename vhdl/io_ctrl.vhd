@@ -3,6 +3,10 @@ use ieee.std_logic_1164.all;
 
 entity io_ctrl is
 
+    generic (
+        clk_freq : integer := 100_000_000
+    );
+
     port (
         clk_i   : in std_logic;
         reset_i : in std_logic;
