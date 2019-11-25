@@ -66,7 +66,7 @@ begin
     p_reset: process
     begin
         s_reset_i <= '1';
-        wait for 500000 ns;
+        wait for 500 us;
         s_reset_i <= '0';
         wait;
     end process p_reset;
@@ -79,28 +79,78 @@ begin
         wait for 5 ns;
     end process p_clk;
 
-    p_sim: process
+    p_pb: process
     begin
-        s_dig0_i <= "11000000";
-        s_dig1_i <= "00110000";
-        s_dig2_i <= "00001100";
-        s_dig3_i <= "00000011";
-        s_led_i <= "1000000000000001";
-        s_sw_i <= "0100000000000010";
-        s_pb_i <= "0110";
-        wait for 2000000 ns;
         s_pb_i <= "0000";
-        s_sw_i <= "0000110011000000";
-        wait for 2000000 ns;
-        s_pb_i <= "1011";
-        s_sw_i <= "0000000011000000";
-        wait for 1000000 ns;
+        wait for 1 ms;
+        s_pb_i <= "0001";
+        wait for 3 ms;
         s_pb_i <= "0010";
-        s_sw_i <= "0000110011000000";
-        wait for 1000000 ns;
-        s_pb_i <= "1011";
-        s_sw_i <= "0000000011000000";
-
+        wait for 3 ms;
+        s_pb_i <= "0100";
+        wait for 3 ms;
+        s_pb_i <= "1000";
+        wait for 1 ms;
+        s_pb_i <= "0000";
+        wait for 1 ms;
+        s_pb_i <= "1000";
         wait;
-    end process p_sim;
+    end process p_pb;
+
+    p_sw: process
+    begin
+        s_sw_i <= X"0000";
+        wait for 1 ms;
+        s_sw_i <= X"0F00";
+        wait for 3 ms;
+        s_sw_i <= X"00F0";
+        wait for 3 ms;
+        s_sw_i <= X"0000";
+        wait for 3 ms;
+        s_sw_i <= X"5555";
+        wait for 1 ms;
+        s_sw_i <= X"AAA5";
+        wait;
+    end process p_sw;
+
+    p_led: process 
+    begin
+        s_led_i <= X"0000";
+        wait for 1 ms;
+        s_led_i <= X"5555";
+        wait for 6 ms;
+        s_led_i <= X"AAAA";
+        wait for 3 ms;
+        s_led_i <= X"0000";
+        wait;
+    end process p_led;
+
+    p_dig: process
+    begin
+        s_dig0_i <= "11111111";
+        s_dig1_i <= "11111111";
+        s_dig2_i <= "11111111";
+        s_dig3_i <= "11111111";
+        wait for 1 ms;
+        s_dig0_i <= "00111111";
+        s_dig1_i <= "11001111";
+        s_dig2_i <= "11110011";
+        s_dig3_i <= "11111100";
+        wait for 3 ms;
+        s_dig0_i <= "00000000";
+        s_dig1_i <= "00111100";
+        s_dig2_i <= "11111111";
+        s_dig3_i <= "11000011";
+        wait for 3 ms;
+        s_dig0_i <= "01010101";
+        s_dig1_i <= "10101010";
+        s_dig2_i <= "11110000";
+        s_dig3_i <= "00001111";
+        wait for 3 ms;
+        s_dig0_i <= "10000000";
+        s_dig1_i <= "00100000";
+        s_dig2_i <= "00001000";
+        s_dig3_i <= "00000010";
+        wait;
+    end process p_dig;
 end sim;
