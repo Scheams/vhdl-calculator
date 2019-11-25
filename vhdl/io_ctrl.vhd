@@ -6,7 +6,11 @@
 -- Unit:        IO Control Unit (Entity)
 --
 -- Version:
---      -) Version 1.0.0 / 21.11.2019
+--      -) Version 1.0.0
+--
+-- Changelog:
+--      -) Version 1.0.0 (21.11.2019)
+--         First implementation of IO Control entity.
 --
 -- Description:
 --      The IO Control Unit is part of the VHDL calculator project.
