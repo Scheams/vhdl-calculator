@@ -30,11 +30,6 @@ architecture rtl of calc_ctrl is
     constant C_DIGIT_MINUS : std_logic_vector (7 downto 0) := "11111101";
     constant C_DIGIT_DARK  : std_logic_vector (7 downto 0) := "11111111";
 
-    constant C_OP_ADD           : std_logic_vector (3 downto 0) := "0000";
-    constant C_OP_SQUARE_ROOT   : std_logic_vector (3 downto 0) := "0110";
-    constant C_OP_NOT           : std_logic_vector (3 downto 0) := "1000";
-    constant c_OP_XOR           : std_logic_vector (3 downto 0) := "1011";
-
     type t_digits is (
         SS_0,
         SS_1,
@@ -59,16 +54,8 @@ architecture rtl of calc_ctrl is
         SS_O,
         SS_O_DP,
         SS_MINUS,
-        SS_DARK
-    );
-
-    type t_state is (
-        S_RESET,
-        S_ENTER_OP_1,
-        S_ENTER_OP_2,
-        S_ENTER_OPERATION,
-        S_CALCULATE,
-        S_DISPLAY
+        SS_DARK,
+        SS_UNDEF
     );
 
     function f_raw_to_dig (
@@ -106,7 +93,33 @@ architecture rtl of calc_ctrl is
             when C_DIGIT_O => return SS_O;
             when C_DIGIT_O_DP => return SS_O_DP;
             when C_DIGIT_MINUS => return SS_MINUS;
-            when others     => return SS_DARK;
+            when C_DIGIT_DARK => return SS_DARK;
+            when others => return SS_UNDEF;
+        end case;
+    end function;
+
+    constant C_OP_ADD           : std_logic_vector (3 downto 0) := "0000";
+    constant C_OP_SQUARE_ROOT   : std_logic_vector (3 downto 0) := "0110";
+    constant C_OP_NOT           : std_logic_vector (3 downto 0) := "1000";
+    constant C_OP_XOR           : std_logic_vector (3 downto 0) := "1011";
+
+    type t_operation is (
+        OP_ADD,
+        OP_SQUARE_ROOT,
+        OP_NOT,
+        OP_XOR,
+        OP_UNDEF
+    );
+
+    function f_raw_to_operation (p_raw : std_logic_vector (3 downto 0) := "0000")
+    return t_operation is
+    begin
+        case p_raw is 
+            when C_OP_ADD => return OP_ADD;
+            when C_OP_SQUARE_ROOT => return OP_SQUARE_ROOT;
+            when C_OP_NOT => return OP_NOT;
+            when C_OP_XOR => return OP_XOR;
+            when others => return OP_UNDEF;
         end case;
     end function;
 
@@ -135,39 +148,48 @@ architecture rtl of calc_ctrl is
     end function;
 
     procedure p_op_to_digit(
-        signal s_optype_o : in std_logic_vector (3 downto 0);
-        signal s_dig0 : out std_logic_vector (7 downto 0);
-        signal s_dig1 : out std_logic_vector (7 downto 0);
-        signal s_dig2 : out std_logic_vector (7 downto 0)
+        signal p_s_optype_o : in std_logic_vector (3 downto 0);
+        signal p_s_dig0 : out std_logic_vector (7 downto 0);
+        signal p_s_dig1 : out std_logic_vector (7 downto 0);
+        signal p_s_dig2 : out std_logic_vector (7 downto 0)
     ) is
     begin
-        case s_optype_o is 
+        case p_s_optype_o is 
             when C_OP_ADD =>
-                s_dig0 <= C_DIGIT_D;
-                s_dig1 <= C_DIGIT_D;
-                s_dig2 <= C_DIGIT_A;
+                p_s_dig0 <= C_DIGIT_D;
+                p_s_dig1 <= C_DIGIT_D;
+                p_s_dig2 <= C_DIGIT_A;
 
             when C_OP_SQUARE_ROOT =>
-                s_dig0 <= C_DIGIT_S;
-                s_dig1 <= C_DIGIT_R;
-                s_dig2 <= C_DIGIT_O;
+                p_s_dig0 <= C_DIGIT_S;
+                p_s_dig1 <= C_DIGIT_R;
+                p_s_dig2 <= C_DIGIT_O;
 
             when C_OP_NOT =>
-                s_dig0 <= C_DIGIT_DARK;
-                s_dig1 <= C_DIGIT_N;
-                s_dig2 <= C_DIGIT_O;
+                p_s_dig0 <= C_DIGIT_DARK;
+                p_s_dig1 <= C_DIGIT_N;
+                p_s_dig2 <= C_DIGIT_O;
 
             when c_OP_XOR =>
-                s_dig0 <= C_DIGIT_E;
-                s_dig1 <= C_DIGIT_O;
-                s_dig2 <= C_DIGIT_R;
+                p_s_dig0 <= C_DIGIT_E;
+                p_s_dig1 <= C_DIGIT_O;
+                p_s_dig2 <= C_DIGIT_R;
 
             when others =>
-                s_dig0 <= C_DIGIT_DARK;
-                s_dig1 <= C_DIGIT_DARK;
-                s_dig2 <= C_DIGIT_DARK;
+                p_s_dig0 <= C_DIGIT_DARK;
+                p_s_dig1 <= C_DIGIT_DARK;
+                p_s_dig2 <= C_DIGIT_DARK;
         end case;
     end procedure;
+
+    type t_state is (
+        S_RESET,
+        S_ENTER_OP_1,
+        S_ENTER_OP_2,
+        S_ENTER_OPERATION,
+        S_CALCULATE,
+        S_DISPLAY
+    );
 
     signal s_state : t_state;
     signal s_op1_o : std_logic_vector (11 downto 0);
@@ -183,6 +205,7 @@ architecture rtl of calc_ctrl is
     signal s_dig1 : t_digits;
     signal s_dig2 : t_digits;
     signal s_dig3 : t_digits;
+    signal s_optype : t_operation;
 
 begin
 
@@ -190,6 +213,7 @@ begin
     s_dig1 <= f_raw_to_dig(s_dig1_o);
     s_dig2 <= f_raw_to_dig(s_dig2_o);
     s_dig3 <= f_raw_to_dig(s_dig3_o);
+    s_optype <= f_raw_to_operation(s_optype_o);
 
     p_fsm_comb: process(clk_i, reset_i)
     begin
@@ -269,7 +293,7 @@ begin
                 s_dig3_o <= C_DIGIT_2;
 
             when S_ENTER_OPERATION =>
-                p_op_to_digit(s_optype_o, s_dig0_o, s_dig1_o, s_dig3_o);
+                p_op_to_digit(s_optype_o, s_dig0_o, s_dig1_o, s_dig2_o);
                 s_dig3_o <= C_DIGIT_O_DP;
 
             when S_CALCULATE =>

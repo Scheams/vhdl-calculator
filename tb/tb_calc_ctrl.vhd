@@ -95,6 +95,9 @@ begin
         s_pbsync_i <= (others => '0');
         s_swsync_i <= (others => '0');
         s_result_i <= (others => '0');
+        s_sign_i <= '0';
+        s_overflow_i <= '0';
+        s_error_i <= '0';
 
         wait for 100 ns;
         s_finished_i <= '1';
@@ -128,6 +131,16 @@ begin
         wait for 10 ns;
         s_finished_i <= '0';
         s_result_i <= X"0800";
+
+        wait for 100 ns;
+        s_sign_i <= '1';
+
+        wait for 100 ns;
+        s_overflow_i <= '1';
+
+        wait for 100 ns;
+        s_error_i <= '1';
+        
         wait;
     end process p_sim;
 end sim;
