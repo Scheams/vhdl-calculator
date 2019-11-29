@@ -5,4 +5,7 @@
 #do calc_ctrl_sim.do
 
 # Uncomment the next line to run simulation for ALU Unit
-do alu_sim.do
+#do alu_sim.do
+
+# Uncomment the next line to run simulation for Top Unit
+do calc_sim.do

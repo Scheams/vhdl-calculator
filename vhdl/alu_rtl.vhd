@@ -200,7 +200,7 @@ begin
             if s_not_running = '1' then
                 s_not_finished <= '1';
                 s_not_running <= '0';
-            elsif start_i'event and start_i = '1' then
+            elsif start_i = '1' then
                 s_not_result <= "0000" & (not op1_i);
                 s_not_sign <= '0';
                 s_not_overflow <= '0';
@@ -226,7 +226,7 @@ begin
             if s_xor_running = '1' then
                 s_xor_running <= '0';
                 s_xor_finished <= '1';
-            elsif start_i'event and start_i = '1' then
+            elsif start_i = '1' then
                 s_xor_result <= "0000" & (op1_i xor op2_i);
                 s_xor_sign <= '0';
                 s_xor_overflow <= '0';

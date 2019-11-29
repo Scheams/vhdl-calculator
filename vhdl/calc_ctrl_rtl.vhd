@@ -114,7 +114,7 @@ architecture rtl of calc_ctrl is
     function f_raw_to_operation (p_raw : std_logic_vector (3 downto 0) := "0000")
     return t_operation is
     begin
-        case p_raw is 
+        case p_raw is
             when C_OP_ADD => return OP_ADD;
             when C_OP_SQUARE_ROOT => return OP_SQUARE_ROOT;
             when C_OP_NOT => return OP_NOT;
@@ -123,7 +123,7 @@ architecture rtl of calc_ctrl is
         end case;
     end function;
 
-    function f_hex_to_digit (p_hex : std_logic_vector (3 downto 0) := "0000") 
+    function f_hex_to_digit (p_hex : std_logic_vector (3 downto 0) := "0000")
     return std_logic_vector is
     begin
         case p_hex is
@@ -154,31 +154,31 @@ architecture rtl of calc_ctrl is
         signal p_s_dig2 : out std_logic_vector (7 downto 0)
     ) is
     begin
-        case p_s_optype_o is 
+        case p_s_optype_o is
             when C_OP_ADD =>
-                p_s_dig0 <= C_DIGIT_D;
-                p_s_dig1 <= C_DIGIT_D;
                 p_s_dig2 <= C_DIGIT_A;
+                p_s_dig1 <= C_DIGIT_D;
+                p_s_dig0 <= C_DIGIT_D;
 
             when C_OP_SQUARE_ROOT =>
-                p_s_dig0 <= C_DIGIT_S;
-                p_s_dig1 <= C_DIGIT_R;
-                p_s_dig2 <= C_DIGIT_O;
+                p_s_dig2 <= C_DIGIT_S;
+                p_s_dig1 <= C_DIGIT_Q;
+                p_s_dig0 <= C_DIGIT_R;
 
             when C_OP_NOT =>
-                p_s_dig0 <= C_DIGIT_DARK;
-                p_s_dig1 <= C_DIGIT_N;
                 p_s_dig2 <= C_DIGIT_O;
+                p_s_dig1 <= C_DIGIT_N;
+                p_s_dig0 <= C_DIGIT_DARK;
 
             when c_OP_XOR =>
-                p_s_dig0 <= C_DIGIT_E;
-                p_s_dig1 <= C_DIGIT_O;
                 p_s_dig2 <= C_DIGIT_R;
+                p_s_dig1 <= C_DIGIT_O;
+                p_s_dig0 <= C_DIGIT_E;
 
             when others =>
-                p_s_dig0 <= C_DIGIT_DARK;
-                p_s_dig1 <= C_DIGIT_DARK;
                 p_s_dig2 <= C_DIGIT_DARK;
+                p_s_dig1 <= C_DIGIT_DARK;
+                p_s_dig0 <= C_DIGIT_DARK;
         end case;
     end procedure;
 
@@ -207,6 +207,10 @@ architecture rtl of calc_ctrl is
     signal s_dig3 : t_digits;
     signal s_optype : t_operation;
 
+    signal s_pbedge : std_logic_vector(3 downto 0);
+    signal s_pbff0  : std_logic_vector(3 downto 0);
+    signal s_pbff1  : std_logic_vector(3 downto 0);
+
 begin
 
     s_dig0 <= f_raw_to_dig(s_dig0_o);
@@ -214,6 +218,8 @@ begin
     s_dig2 <= f_raw_to_dig(s_dig2_o);
     s_dig3 <= f_raw_to_dig(s_dig3_o);
     s_optype <= f_raw_to_operation(s_optype_o);
+
+    s_pbedge <= not s_pbff1 and s_pbff0;
 
     p_fsm_comb: process(clk_i, reset_i)
     begin
@@ -223,22 +229,28 @@ begin
             s_op2_o <= (others => '0');
             s_optype_o <= C_OP_ADD;
             start_o <= '0';
+            s_pbff0 <= (others => '0');
+            s_pbff1 <= (others => '0');
 
         elsif clk_i'event and clk_i = '1' then
+
+            s_pbff0 <= pbsync_i;
+            s_pbff1 <= s_pbff0;
+
             -- BTNL pressed
-            if pbsync_i(0)'event and pbsync_i(0) = '1' then
+            if s_pbedge(0) = '1' then
                 s_state <= S_ENTER_OP_1;
-    
+
             -- BTNC pressed
-            elsif pbsync_i(1)'event and pbsync_i(1) = '1' then
+            elsif s_pbedge(1) = '1' then
                 s_state <= S_ENTER_OP_2;
-    
+
             -- BTNR pressed
-            elsif pbsync_i(2)'event and pbsync_i(2) = '1' then
+            elsif s_pbedge(2) = '1' then
                 s_state <= S_ENTER_OPERATION;
-    
+
             -- BTND pressed
-            elsif pbsync_i(3)'event and pbsync_i(3) = '1' then
+            elsif s_pbedge(3) = '1' then
                 s_state <= S_RESET;
             end if;
 
