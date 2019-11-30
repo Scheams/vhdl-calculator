@@ -1,8 +1,30 @@
+--------------------------------------------------------------------------------
+-- Author:      Christoph Amon
+--
+-- Created:     30.11.2019
+--
+-- Unit:        Calculator/Top Unit (Architecture)
+--
+-- Version:
+--      -) Version 1.0.0
+--
+-- Changelog:
+--      -) Version 1.0.0 (30.11.2019)
+--         First implementation of Calculator/Top Unit architecture.
+--
+-- Description:
+--      This is the top level unit that combines all other units to the
+--      calculator.
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 
 architecture struct of calc is
 
+    ----------------------------------------------------------------------------
+    -- Declaration of ALU component
+    ----------------------------------------------------------------------------
     component alu
         port (
             clk_i       : in std_logic;
@@ -19,6 +41,9 @@ architecture struct of calc is
         );
     end component;
 
+    ----------------------------------------------------------------------------
+    -- Declaration of Calculator Control component
+    ----------------------------------------------------------------------------
     component calc_ctrl
         port (
             clk_i       : in  std_logic;
@@ -42,6 +67,9 @@ architecture struct of calc is
         );
     end component;
 
+    ----------------------------------------------------------------------------
+    -- Declaration of IO Control component
+    ----------------------------------------------------------------------------
     component io_ctrl
         port (
             clk_i   : in std_logic;
@@ -62,6 +90,7 @@ architecture struct of calc is
         );
     end component;
 
+    -- All signal to interconnect the components
     signal s_op1       : std_logic_vector (11 downto 0);
     signal s_op2       : std_logic_vector (11 downto 0);
     signal s_optype    : std_logic_vector ( 3 downto 0);
@@ -81,6 +110,9 @@ architecture struct of calc is
 
 begin
 
+    ----------------------------------------------------------------------------
+    -- Instantiation of ALU component
+    ----------------------------------------------------------------------------
     u_alu: alu
     port map(
         clk_i      => clk_i,
@@ -96,6 +128,9 @@ begin
         error_o    => s_error
     );
 
+    ----------------------------------------------------------------------------
+    -- Instantiation of Calculator Control component
+    ----------------------------------------------------------------------------
     u_calc_ctrl: calc_ctrl
     port map(
         clk_i       => clk_i,
@@ -118,6 +153,9 @@ begin
         led_o       => s_led
     );
 
+    ----------------------------------------------------------------------------
+    -- Instantiation of IO Control component
+    ----------------------------------------------------------------------------
     u_io_ctrl: io_ctrl
     port map (
         clk_i    => clk_i,
