@@ -59,7 +59,7 @@ architecture rtl of calc_ctrl is
     type t_digits is (
         SS_0, SS_1, SS_2, SS_3, SS_4, SS_5, SS_6, SS_7, SS_8, SS_9,
         SS_A, SS_B, SS_C, SS_D, SS_E, SS_F, SS_N, SS_O, SS_Q, SS_R, SS_S,
-        SS_5_OR_S, SS_6_OR_B
+        SS_5_OR_S, SS_6_OR_B,
         SS_O_DP, SS_MINUS, SS_DARK,
         SS_UNDEF
     );
