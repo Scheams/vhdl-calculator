@@ -217,12 +217,15 @@ architecture rtl of calc_ctrl is
         S_DISPLAY
     );
 
+    -- State of FSM
     signal s_state : t_state;
 
+    -- Edge detection of pushbuttons
     signal s_pbedge : std_logic_vector (3 downto 0);
     signal s_pbff0  : std_logic_vector (3 downto 0);
     signal s_pbff1  : std_logic_vector (3 downto 0);
 
+    -- Internal signals for storage elements
     signal s_op1_o    : std_logic_vector (11 downto 0);
     signal s_op2_o    : std_logic_vector (11 downto 0);
     signal s_optype_o : std_logic_vector ( 3 downto 0);
@@ -240,15 +243,23 @@ architecture rtl of calc_ctrl is
 
 begin
 
+    -- Convert raw outputs to enum types for simulation
     s_dig0 <= f_raw_to_dig(s_dig0_o);
     s_dig1 <= f_raw_to_dig(s_dig1_o);
     s_dig2 <= f_raw_to_dig(s_dig2_o);
     s_dig3 <= f_raw_to_dig(s_dig3_o);
     s_optype <= f_raw_to_operation(s_optype_o);
 
+    -- Convert 2 stage Flop-Flop into edge detection
     s_pbedge <= not s_pbff1 and s_pbff0;
 
-    p_fsm_comb: process(clk_i, reset_i)
+    ----------------------------------------------------------------------------
+    -- This process controls the stages of the calculator FSM. The user is able
+    -- to switch between the states "Enter Operand 1", "Enter Operand 2" and
+    -- "Enter Operation" and "Display Calculation" at any time by a button
+    -- press of BTNL, BTNC, BTNR or BTND
+    ----------------------------------------------------------------------------
+    p_fsm_seq: process(clk_i, reset_i)
     begin
         if reset_i = '1' then
             s_state <= S_RESET;
@@ -261,6 +272,7 @@ begin
 
         elsif clk_i'event and clk_i = '1' then
 
+            -- Two stage flipflop
             s_pbff0 <= pbsync_i;
             s_pbff1 <= s_pbff0;
 
@@ -282,15 +294,19 @@ begin
             end if;
 
             case s_state is
+                -- Stage any value given by switches into operand 1
                 when S_ENTER_OP_1 =>
                     s_op1_o <= swsync_i(11 downto 0);
 
+                -- Stage any value given by switches into operand 2
                 when S_ENTER_OP_2 =>
                     s_op2_o <= swsync_i(11 downto 0);
 
+                -- Stage any value given by switches into operation
                 when S_ENTER_OPERATION =>
                     s_optype_o <= swsync_i(15 downto 12);
 
+                -- Wait for ALU to finish its job
                 when S_CALCULATE =>
                     start_o <= '0';
                     s_state <= S_CALCULATE;
@@ -298,15 +314,16 @@ begin
                         s_state <= S_DISPLAY;
                     end if;
 
+                -- Do nothing at this state
                 when S_DISPLAY =>
 
-                -- S_RESET
+                -- Start calculation by start impuls (state S_RESET)
                 when others =>
                     s_state <= S_CALCULATE;
                     start_o <= '1';
             end case;
         end if;
-    end process p_fsm_comb;
+    end process p_fsm_seq;
 
     op1_o <= s_op1_o;
     op2_o <= s_op2_o;
@@ -316,31 +333,50 @@ begin
     dig2_o <= s_dig2_o;
     dig3_o <= s_dig3_o;
 
-    p_fsm_ss: process(s_state, s_op1_o, s_op2_o, s_optype_o, result_i, error_i, overflow_i, sign_i)
+    ----------------------------------------------------------------------------
+    -- This process controls the 7-segment display according to the current
+    -- state of the FSM.
+    ----------------------------------------------------------------------------
+    p_fsm_ss: process(s_state, s_op1_o, s_op2_o, s_optype_o, result_i,
+        error_i, overflow_i, sign_i)
     begin
         case s_state is
+            -- Show: "1hhh"
+            -- Where 1 is the indication for the state and hhh is the hex
+            -- value controlled by the switches SW0 to SW11
             when S_ENTER_OP_1 =>
                 s_dig0_o <= f_hex_to_digit(s_op1_o( 3 downto 0));
                 s_dig1_o <= f_hex_to_digit(s_op1_o( 7 downto 4));
                 s_dig2_o <= f_hex_to_digit(s_op1_o(11 downto 8));
                 s_dig3_o <= C_DIGIT_1;
 
+            -- Show: "2hhh"
+            -- Where 2 is the indication for the state and hhh is the hex
+            -- value controlled by the switches SW0 to SW11
             when S_ENTER_OP_2 =>
                 s_dig0_o <= f_hex_to_digit(s_op2_o( 3 downto 0));
                 s_dig1_o <= f_hex_to_digit(s_op2_o( 7 downto 4));
                 s_dig2_o <= f_hex_to_digit(s_op2_o(11 downto 8));
                 s_dig3_o <= C_DIGIT_2;
 
+            -- Show: "o.XXX"
+            -- Where o. is the indication for the state and XXX is a string
+            -- that represents the operation
             when S_ENTER_OPERATION =>
                 p_op_to_digit(s_optype_o, s_dig0_o, s_dig1_o, s_dig2_o);
                 s_dig3_o <= C_DIGIT_O_DP;
 
+            -- During calculation the display is turned off
             when S_CALCULATE =>
                 s_dig0_o <= C_DIGIT_DARK;
                 s_dig1_o <= C_DIGIT_DARK;
                 s_dig2_o <= C_DIGIT_DARK;
                 s_dig3_o <= C_DIGIT_DARK;
 
+            -- After the calculation is finished, the result is displayed if
+            -- no error occured. If the error flag is set, the display shows
+            -- "Err ", if an overflow occured the display shows "oooo". If the
+            -- sign flag is set a minus will show up "-hhh".
             when S_DISPLAY =>
                 if error_i = '1' then
                     s_dig0_o <= C_DIGIT_DARK;
@@ -364,7 +400,7 @@ begin
                     s_dig3_o <= f_hex_to_digit(result_i(15 downto 12));
                 end if;
 
-            -- S_RESET
+            -- During the reset state (S_RESET) all digits are dark
             when others =>
                 s_dig0_o <= C_DIGIT_DARK;
                 s_dig1_o <= C_DIGIT_DARK;
@@ -373,6 +409,10 @@ begin
         end case;
     end process p_fsm_ss;
 
+    ----------------------------------------------------------------------------
+    -- This process turns the 16 LEDs on or off. Only during the display state
+    -- the first LED is turned on.
+    ----------------------------------------------------------------------------
     p_fsm_led: process(s_state)
     begin
         case s_state is
