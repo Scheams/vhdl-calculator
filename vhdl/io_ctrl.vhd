@@ -1,4 +1,4 @@
----------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Author:      Christoph Amon
 --
 -- Created:     18.11.2019
@@ -15,9 +15,9 @@
 -- Description:
 --      The IO Control Unit is part of the VHDL calculator project.
 --      It manages the debouncing of the switches and pushbuttons.
---      Furthermore the LEDs and the 7-segment display are 
+--      Furthermore the LEDs and the 7-segment display are
 --      controlled.
----------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;

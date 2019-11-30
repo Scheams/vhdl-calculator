@@ -1,66 +1,76 @@
+--------------------------------------------------------------------------------
+-- Author:      Christoph Amon
+--
+-- Created:     29.11.2019
+--
+-- Unit:        Calculator Control Unit (Architecture)
+--
+-- Version:
+--      -) Version 1.0.0
+--
+-- Changelog:
+--      -) Version 1.0.0 (29.11.2019)
+--         First implementation of Calculator Control architecture.
+--
+-- Description:
+--      The Calculator Control Unit is the brain of the calculator project.
+--      It connects the IO with the ALU and decides what to do at which state.
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 
 architecture rtl of calc_ctrl is
 
-    constant C_DIGIT_0 : std_logic_vector (7 downto 0) := "00000011";
-    constant C_DIGIT_1 : std_logic_vector (7 downto 0) := "10011111";
-    constant C_DIGIT_2 : std_logic_vector (7 downto 0) := "00100101";
-    constant C_DIGIT_3 : std_logic_vector (7 downto 0) := "00001101";
+    ----------------------------------------------------------------------------
+    -- Constants that represent one 7-segment digit
+    -- The 8 bit value is written to the outputs of the cathode
+    ----------------------------------------------------------------------------
+    constant C_DIGIT_0 : std_logic_vector (7 downto 0) := "11000000";
+    constant C_DIGIT_1 : std_logic_vector (7 downto 0) := "11111001";
+    constant C_DIGIT_2 : std_logic_vector (7 downto 0) := "10100100";
+    constant C_DIGIT_3 : std_logic_vector (7 downto 0) := "10110000";
     constant C_DIGIT_4 : std_logic_vector (7 downto 0) := "10011001";
-    constant C_DIGIT_5 : std_logic_vector (7 downto 0) := "01001001";
-    constant C_DIGIT_6 : std_logic_vector (7 downto 0) := "11000001";
-    constant C_DIGIT_7 : std_logic_vector (7 downto 0) := "00011111";
-    constant C_DIGIT_8 : std_logic_vector (7 downto 0) := "00000001";
-    constant C_DIGIT_9 : std_logic_vector (7 downto 0) := "00001001";
-    constant C_DIGIT_A : std_logic_vector (7 downto 0) := "00010001";
-    constant C_DIGIT_B : std_logic_vector (7 downto 0) := "11000001";
-    constant C_DIGIT_C : std_logic_vector (7 downto 0) := "10011101";
-    constant C_DIGIT_D : std_logic_vector (7 downto 0) := "10000101";
-    constant C_DIGIT_E : std_logic_vector (7 downto 0) := "01100001";
-    constant C_DIGIT_F : std_logic_vector (7 downto 0) := "01110001";
+    constant C_DIGIT_5 : std_logic_vector (7 downto 0) := "10010010";
+    constant C_DIGIT_6 : std_logic_vector (7 downto 0) := "10000011";
+    constant C_DIGIT_7 : std_logic_vector (7 downto 0) := "11111000";
+    constant C_DIGIT_8 : std_logic_vector (7 downto 0) := "10000000";
+    constant C_DIGIT_9 : std_logic_vector (7 downto 0) := "10010000";
 
-    constant C_DIGIT_S : std_logic_vector (7 downto 0) := "01001001";
-    constant C_DIGIT_Q : std_logic_vector (7 downto 0) := "00001001";
-    constant C_DIGIT_R : std_logic_vector (7 downto 0) := "11110101";
-    constant C_DIGIT_N : std_logic_vector (7 downto 0) := "11010101";
-    constant C_DIGIT_O : std_logic_vector (7 downto 0) := "11000101";
+    constant C_DIGIT_A : std_logic_vector (7 downto 0) := "10001000";
+    constant C_DIGIT_B : std_logic_vector (7 downto 0) := "10000011";
+    constant C_DIGIT_C : std_logic_vector (7 downto 0) := "11000110";
+    constant C_DIGIT_D : std_logic_vector (7 downto 0) := "10100001";
+    constant C_DIGIT_E : std_logic_vector (7 downto 0) := "10000110";
+    constant C_DIGIT_F : std_logic_vector (7 downto 0) := "10001110";
+    constant C_DIGIT_N : std_logic_vector (7 downto 0) := "10101011";
+    constant C_DIGIT_O : std_logic_vector (7 downto 0) := "10100011";
+    constant C_DIGIT_Q : std_logic_vector (7 downto 0) := "10011000";
+    constant C_DIGIT_R : std_logic_vector (7 downto 0) := "10101111";
+    constant C_DIGIT_S : std_logic_vector (7 downto 0) := "10010010";
 
-    constant C_DIGIT_O_DP  : std_logic_vector (7 downto 0) := "11000100";
-    constant C_DIGIT_MINUS : std_logic_vector (7 downto 0) := "11111101";
+    constant C_DIGIT_O_DP  : std_logic_vector (7 downto 0) := "00100011";
+    constant C_DIGIT_MINUS : std_logic_vector (7 downto 0) := "10111111";
     constant C_DIGIT_DARK  : std_logic_vector (7 downto 0) := "11111111";
 
+    ----------------------------------------------------------------------------
+    -- Enumeration type for better readability during simulation
+    ----------------------------------------------------------------------------
     type t_digits is (
-        SS_0,
-        SS_1,
-        SS_2,
-        SS_3,
-        SS_4,
-        SS_5,
-        SS_6,
-        SS_7,
-        SS_8,
-        SS_9,
-        SS_A,
-        SS_B,
-        SS_C,
-        SS_D,
-        SS_E,
-        SS_F,
-        SS_S,
-        SS_Q,
-        SS_R,
-        SS_N,
-        SS_O,
-        SS_O_DP,
-        SS_MINUS,
-        SS_DARK,
+        SS_0, SS_1, SS_2, SS_3, SS_4, SS_5, SS_6, SS_7, SS_8, SS_9,
+        SS_A, SS_B, SS_C, SS_D, SS_E, SS_F, SS_N, SS_O, SS_Q, SS_R, SS_S,
+        SS_5_OR_S, SS_6_OR_B
+        SS_O_DP, SS_MINUS, SS_DARK,
         SS_UNDEF
     );
 
+    ----------------------------------------------------------------------------
+    -- Function that converts a constant C_DIGIT_* to a enum of type t_digits
+    -- p_raw: The raw bits of type C_DIGIT_*
+    -- return: Enumerated type of digit
+    ----------------------------------------------------------------------------
     function f_raw_to_dig (
-        p_raw : std_logic_vector (7 downto 0) := C_DIGIT_DARK;
-        p_alternative : std_logic := '0')
+        p_raw : std_logic_vector (7 downto 0) := C_DIGIT_DARK)
     return t_digits is
     begin
         case p_raw is
@@ -69,49 +79,49 @@ architecture rtl of calc_ctrl is
             when C_DIGIT_2 => return SS_2;
             when C_DIGIT_3 => return SS_3;
             when C_DIGIT_4 => return SS_4;
-            when C_DIGIT_5 => -- Same as C_DIGIT_S
-                if p_alternative = '0' then return SS_5;
-                else return SS_S;
-                end if;
-            when C_DIGIT_6 => -- Same as C_DIGIT_B
-                if p_alternative = '0' then return SS_6;
-                else return SS_B;
-                end if;
+            when C_DIGIT_5 => return SS_5_OR_S;
+            when C_DIGIT_6 => return SS_6_OR_B;
             when C_DIGIT_7 => return SS_7;
             when C_DIGIT_8 => return SS_8;
-            when C_DIGIT_9 => -- Same as C_DIGIT_Q
-                if p_alternative = '0' then return SS_9;
-                else return SS_Q;
-                end if;
+            when C_DIGIT_9 => return SS_9;
             when C_DIGIT_A => return SS_A;
             when C_DIGIT_C => return SS_C;
             when C_DIGIT_D => return SS_D;
             when C_DIGIT_E => return SS_E;
             when C_DIGIT_F => return SS_F;
+            when C_DIGIT_Q => return SS_Q;
             when C_DIGIT_R => return SS_R;
             when C_DIGIT_N => return SS_N;
             when C_DIGIT_O => return SS_O;
-            when C_DIGIT_O_DP => return SS_O_DP;
+            when C_DIGIT_O_DP  => return SS_O_DP;
             when C_DIGIT_MINUS => return SS_MINUS;
-            when C_DIGIT_DARK => return SS_DARK;
+            when C_DIGIT_DARK  => return SS_DARK;
             when others => return SS_UNDEF;
         end case;
     end function;
 
+    ----------------------------------------------------------------------------
+    -- Constants for decoding the mathematical operations
+    ----------------------------------------------------------------------------
     constant C_OP_ADD           : std_logic_vector (3 downto 0) := "0000";
     constant C_OP_SQUARE_ROOT   : std_logic_vector (3 downto 0) := "0110";
     constant C_OP_NOT           : std_logic_vector (3 downto 0) := "1000";
     constant C_OP_XOR           : std_logic_vector (3 downto 0) := "1011";
 
+    ----------------------------------------------------------------------------
+    -- Enumeration type for easier readability of the operations
+    ----------------------------------------------------------------------------
     type t_operation is (
-        OP_ADD,
-        OP_SQUARE_ROOT,
-        OP_NOT,
-        OP_XOR,
-        OP_UNDEF
+        OP_ADD, OP_SQUARE_ROOT, OP_NOT, OP_XOR, OP_UNDEF
     );
 
-    function f_raw_to_operation (p_raw : std_logic_vector (3 downto 0) := "0000")
+    ----------------------------------------------------------------------------
+    -- Function to convert the constants C_OP_* to a enum of type t_operation
+    -- p_raw: Raw value of constant C_OP_*
+    -- return: Enumerated type of operation
+    ----------------------------------------------------------------------------
+    function f_raw_to_operation (
+        p_raw : std_logic_vector (3 downto 0) := "0000")
     return t_operation is
     begin
         case p_raw is
@@ -123,6 +133,11 @@ architecture rtl of calc_ctrl is
         end case;
     end function;
 
+    ----------------------------------------------------------------------------
+    -- Function to convert a hexadecimal value (4 bit) into a single digit
+    -- p_hex: Hexadecimal value (0 to 15)
+    -- return: Logic vector that represent the hex value
+    ----------------------------------------------------------------------------
     function f_hex_to_digit (p_hex : std_logic_vector (3 downto 0) := "0000")
     return std_logic_vector is
     begin
@@ -147,14 +162,22 @@ architecture rtl of calc_ctrl is
         end case;
     end function;
 
+    ----------------------------------------------------------------------------
+    -- Procedure to convert the operation type to a 3-digit word on the
+    -- seven segment display
+    -- p_s_optype: Type of operation
+    -- p_s_dig0: Signal to digit 0
+    -- p_s_dig1: Signal to digit 1
+    -- p_s_dig2: Signal to digit 2
+    ----------------------------------------------------------------------------
     procedure p_op_to_digit(
-        signal p_s_optype_o : in std_logic_vector (3 downto 0);
+        signal p_s_optype : in std_logic_vector (3 downto 0);
         signal p_s_dig0 : out std_logic_vector (7 downto 0);
         signal p_s_dig1 : out std_logic_vector (7 downto 0);
         signal p_s_dig2 : out std_logic_vector (7 downto 0)
     ) is
     begin
-        case p_s_optype_o is
+        case p_s_optype is
             when C_OP_ADD =>
                 p_s_dig2 <= C_DIGIT_A;
                 p_s_dig1 <= C_DIGIT_D;
@@ -166,14 +189,14 @@ architecture rtl of calc_ctrl is
                 p_s_dig0 <= C_DIGIT_R;
 
             when C_OP_NOT =>
-                p_s_dig2 <= C_DIGIT_O;
-                p_s_dig1 <= C_DIGIT_N;
+                p_s_dig2 <= C_DIGIT_N;
+                p_s_dig1 <= C_DIGIT_O;
                 p_s_dig0 <= C_DIGIT_DARK;
 
             when c_OP_XOR =>
-                p_s_dig2 <= C_DIGIT_R;
+                p_s_dig2 <= C_DIGIT_E;
                 p_s_dig1 <= C_DIGIT_O;
-                p_s_dig0 <= C_DIGIT_E;
+                p_s_dig0 <= C_DIGIT_R;
 
             when others =>
                 p_s_dig2 <= C_DIGIT_DARK;
@@ -182,6 +205,9 @@ architecture rtl of calc_ctrl is
         end case;
     end procedure;
 
+    ----------------------------------------------------------------------------
+    -- Enumeration type for the internal FSM state
+    ----------------------------------------------------------------------------
     type t_state is (
         S_RESET,
         S_ENTER_OP_1,
@@ -192,24 +218,25 @@ architecture rtl of calc_ctrl is
     );
 
     signal s_state : t_state;
-    signal s_op1_o : std_logic_vector (11 downto 0);
-    signal s_op2_o : std_logic_vector (11 downto 0);
-    signal s_optype_o : std_logic_vector (3 downto 0);
 
-    signal s_dig0_o : std_logic_vector (7 downto 0);
-    signal s_dig1_o : std_logic_vector (7 downto 0);
-    signal s_dig2_o : std_logic_vector (7 downto 0);
-    signal s_dig3_o : std_logic_vector (7 downto 0);
+    signal s_pbedge : std_logic_vector (3 downto 0);
+    signal s_pbff0  : std_logic_vector (3 downto 0);
+    signal s_pbff1  : std_logic_vector (3 downto 0);
 
+    signal s_op1_o    : std_logic_vector (11 downto 0);
+    signal s_op2_o    : std_logic_vector (11 downto 0);
+    signal s_optype_o : std_logic_vector ( 3 downto 0);
+    signal s_dig0_o   : std_logic_vector ( 7 downto 0);
+    signal s_dig1_o   : std_logic_vector ( 7 downto 0);
+    signal s_dig2_o   : std_logic_vector ( 7 downto 0);
+    signal s_dig3_o   : std_logic_vector ( 7 downto 0);
+
+    -- Signals that are just for debug purposes
     signal s_dig0 : t_digits;
     signal s_dig1 : t_digits;
     signal s_dig2 : t_digits;
     signal s_dig3 : t_digits;
     signal s_optype : t_operation;
-
-    signal s_pbedge : std_logic_vector(3 downto 0);
-    signal s_pbff0  : std_logic_vector(3 downto 0);
-    signal s_pbff1  : std_logic_vector(3 downto 0);
 
 begin
 
