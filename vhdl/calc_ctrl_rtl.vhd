@@ -6,11 +6,13 @@
 -- Unit:        Calculator Control Unit (Architecture)
 --
 -- Version:
---      -) Version 1.0.0
+--      -) Version 1.0.1
 --
 -- Changelog:
 --      -) Version 1.0.0 (29.11.2019)
 --         First implementation of Calculator Control architecture.
+--      -) Version 1.0.1 (01.12.2019)
+--         C_DIGIT_6 has changed so it does not look like a C_DIGIT_B.
 --
 -- Description:
 --      The Calculator Control Unit is the brain of the calculator project.
@@ -32,7 +34,7 @@ architecture rtl of calc_ctrl is
     constant C_DIGIT_3 : std_logic_vector (7 downto 0) := "10110000";
     constant C_DIGIT_4 : std_logic_vector (7 downto 0) := "10011001";
     constant C_DIGIT_5 : std_logic_vector (7 downto 0) := "10010010";
-    constant C_DIGIT_6 : std_logic_vector (7 downto 0) := "10000011";
+    constant C_DIGIT_6 : std_logic_vector (7 downto 0) := "10000010";
     constant C_DIGIT_7 : std_logic_vector (7 downto 0) := "11111000";
     constant C_DIGIT_8 : std_logic_vector (7 downto 0) := "10000000";
     constant C_DIGIT_9 : std_logic_vector (7 downto 0) := "10010000";
@@ -59,7 +61,7 @@ architecture rtl of calc_ctrl is
     type t_digits is (
         SS_0, SS_1, SS_2, SS_3, SS_4, SS_5, SS_6, SS_7, SS_8, SS_9,
         SS_A, SS_B, SS_C, SS_D, SS_E, SS_F, SS_N, SS_O, SS_Q, SS_R, SS_S,
-        SS_5_OR_S, SS_6_OR_B,
+        SS_5_OR_S,
         SS_O_DP, SS_MINUS, SS_DARK,
         SS_UNDEF
     );
@@ -80,11 +82,12 @@ architecture rtl of calc_ctrl is
             when C_DIGIT_3 => return SS_3;
             when C_DIGIT_4 => return SS_4;
             when C_DIGIT_5 => return SS_5_OR_S;
-            when C_DIGIT_6 => return SS_6_OR_B;
+            when C_DIGIT_6 => return SS_6;
             when C_DIGIT_7 => return SS_7;
             when C_DIGIT_8 => return SS_8;
             when C_DIGIT_9 => return SS_9;
             when C_DIGIT_A => return SS_A;
+            when C_DIGIT_B => return SS_B;
             when C_DIGIT_C => return SS_C;
             when C_DIGIT_D => return SS_D;
             when C_DIGIT_E => return SS_E;
