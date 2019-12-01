@@ -259,7 +259,7 @@ begin
                 s_err_running <= '0';
                 s_err_finished <= '1';
             elsif start_i = '1' then
-                s_err_running <= '0';
+                s_err_running <= '1';
                 s_err_finished <= '0';
             else
                 s_err_finished <= '0';

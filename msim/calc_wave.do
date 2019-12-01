@@ -19,7 +19,7 @@ add wave -noupdate /tb_calc/u_dut/u_calc_ctrl/s_dig1
 add wave -noupdate /tb_calc/u_dut/u_calc_ctrl/s_dig0
 add wave -noupdate /tb_calc/u_dut/u_calc_ctrl/s_optype
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {15301166 ns} 0}
+WaveRestoreCursors {{Cursor 1} {38835616 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 209
 configure wave -valuecolwidth 119
@@ -35,4 +35,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {105 ms}
+WaveRestoreZoom {0 ns} {126 ms}
