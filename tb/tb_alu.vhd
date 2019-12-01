@@ -128,7 +128,7 @@ begin
         s_start_i <= '1';
         wait for 10 ns;
         s_start_i <= '0';
-        wait for 90 ns;
+        wait for 190 ns;
 
         -- Operation NOT
         -- not(0x550) = 0xAAF
@@ -208,13 +208,6 @@ begin
         s_start_i <= '0';
         wait for 90 ns;
 
-        -- Operation Square Root
-        s_optype_i <= "0110";
-        s_start_i <= '1';
-        wait for 10 ns;
-        s_start_i <= '0';
-        wait for 90 ns;
-
         -- Operation NOT
         s_optype_i <= "1000";
         s_start_i <= '1';
@@ -224,6 +217,13 @@ begin
 
         -- Operation XOR
         s_optype_i <= "1011";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation Square Root
+        s_optype_i <= "0110";
         s_start_i <= '1';
         wait for 10 ns;
         s_start_i <= '0';

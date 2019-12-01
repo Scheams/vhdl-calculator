@@ -6,11 +6,13 @@
 -- Unit:        ALU Unit (Architecture)
 --
 -- Version:
---      -) Version 1.0.0
+--      -) Version 1.0.1
 --
 -- Changelog:
 --      -) Version 1.0.0 (30.11.2019)
 --         First implementation of ALU architecture.
+--      -) Version 1.0.1 (01.12.2019)
+--         Add process for error handling that also generates a finished pulse.
 --
 -- Description:
 --      The ALU can perform different kind of operations such as add, square
@@ -64,6 +66,12 @@ architecture rtl of alu is
     signal s_xor_error     : std_logic;
     signal s_xor_running   : std_logic;
 
+    ----------------------------------------------------------------------------
+    -- Signals for Error handling
+    ----------------------------------------------------------------------------
+    signal s_err_running  : std_logic;
+    signal s_err_finished : std_logic;
+
 begin
 
     -- MUX for finshed flag
@@ -72,7 +80,7 @@ begin
         s_sqr_finished when "0110",
         s_not_finished when "1000",
         s_xor_finished when "1011",
-        '0' when others;
+        s_err_finished when others;
 
     -- MUX for result output
     with optype_i select result_o <=
@@ -238,4 +246,24 @@ begin
         end if;
     end process p_xor;
 
+    ----------------------------------------------------------------------------
+    -- Process for error handling
+    ----------------------------------------------------------------------------
+    p_err: process(clk_i, reset_i)
+    begin
+        if reset_i = '1' then
+            s_err_running <= '0';
+            s_err_finished <= '0';
+        elsif clk_i'event and clk_i = '1' then
+            if s_err_running = '1' then
+                s_err_running <= '0';
+                s_err_finished <= '1';
+            elsif start_i = '1' then
+                s_err_running <= '0';
+                s_err_finished <= '0';
+            else
+                s_err_finished <= '0';
+            end if;
+        end if;
+    end process p_err;
 end rtl;
