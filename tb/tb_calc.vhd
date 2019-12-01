@@ -1,3 +1,21 @@
+--------------------------------------------------------------------------------
+-- Author:      Christoph Amon
+--
+-- Created:     01.12.2019
+--
+-- Unit:        Calculator/Top Unit (Testbench)
+--
+-- Version:
+--      -) Version 1.0.0
+--
+-- Changelog:
+--      -) Version 1.0.0 (01.12.2019)
+--         First implementation of Calculator/Top Unit testbench.
+--
+-- Description:
+--
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -47,6 +65,9 @@ begin
     s_sw_i(11 downto  0) <= std_logic_vector(to_unsigned(s_sw_op, 12));
     s_sw_i(15 downto 12) <= s_sw_operation;
 
+    ----------------------------------------------------------------------------
+    -- Create a reset pulse
+    ----------------------------------------------------------------------------
     p_reset: process
     begin
         s_reset_i <= '1';
@@ -55,6 +76,9 @@ begin
         wait;
     end process p_reset;
 
+    ----------------------------------------------------------------------------
+    -- Create a 100 MHz system clock
+    ----------------------------------------------------------------------------
     p_clk: process
     begin
         s_clk_i <= '1';
@@ -63,8 +87,12 @@ begin
         wait for 5 ns;
     end process p_clk;
 
+    ----------------------------------------------------------------------------
+    -- Simulation process for the calculator operation
+    ----------------------------------------------------------------------------
     p_sim: process
     begin
+        -- Reset signals
         s_sw_op <= 0;
         s_sw_operation <= "0000";
         s_pb_i <= (others => '0');
@@ -95,6 +123,7 @@ begin
         s_sw_operation <= "0000"; -- ADD
 
         -- Calculate and display
+        -- 15 + 31 = 46
         wait for 3 ms;
         s_pb_i(3) <= '1';
         wait for 3 ms;
@@ -164,6 +193,20 @@ begin
         s_pb_i(2) <= '0';
         wait for 1 ms;
         s_sw_operation <= "1000"; -- NOT
+
+        -- Calculate and display
+        wait for 3 ms;
+        s_pb_i(3) <= '1';
+        wait for 3 ms;
+        s_pb_i(3) <= '0';
+
+        -- Enter operation
+        wait for 3 ms;
+        s_pb_i(2) <= '1';
+        wait for 3 ms;
+        s_pb_i(2) <= '0';
+        wait for 1 ms;
+        s_sw_operation <= "1111"; -- UNDEF
 
         -- Calculate and display
         wait for 3 ms;
