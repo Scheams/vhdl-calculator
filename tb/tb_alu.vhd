@@ -1,3 +1,22 @@
+--------------------------------------------------------------------------------
+-- Author:      Christoph Amon
+--
+-- Created:     01.12.2019
+--
+-- Unit:        ALU Unit (Testbench)
+--
+-- Version:
+--      -) Version 1.0.0
+--
+-- Changelog:
+--      -) Version 1.0.0 (01.12.2019)
+--         First implementation of ALU testbench.
+--
+-- Description:
+--      Test all operations of the ALU with min, max and random values. Also
+--      check if the result flags work (error, overflow, sign).
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -78,13 +97,20 @@ begin
 
     p_sim: process
     begin
+        -- Reset state
         s_op1_i <= X"000";
         s_op2_i <= X"000";
         s_optype_i <= "0000";
         s_start_i <= '0';
         wait for 100 ns;
 
+        ------------------------------------------------------------------------
+        -- Go Through all operations with random values
+        ------------------------------------------------------------------------
+
         -- Operation ADD
+        -- 0xFFF + 0xAFC = 0x1AFB
+        -- 4095 + 2812 = 6907
         s_op1_i <= X"FFF";
         s_op2_i <= X"AFC";
         s_optype_i <= "0000";
@@ -94,6 +120,8 @@ begin
         wait for 90 ns;
 
         -- Operation square root
+        -- sqrt(0x019) = 0x005
+        -- sqrt(25) = 5
         s_op1_i <= X"019";
         s_op2_i <= X"000";
         s_optype_i <= "0110";
@@ -103,6 +131,8 @@ begin
         wait for 90 ns;
 
         -- Operation NOT
+        -- not(0x550) = 0xAAF
+        -- not(1360) = 2735
         s_op1_i <= X"550";
         s_op2_i <= X"000";
         s_optype_i <= "1000";
@@ -112,6 +142,8 @@ begin
         wait for 90 ns;
 
         -- Operation XOR
+        -- 0xCCC xor 0xF0A = 0x3C6
+        -- 3276 xor 3850 = 966
         s_op1_i <= X"CCC";
         s_op2_i <= X"F0A";
         s_optype_i <= "1011";
@@ -119,6 +151,84 @@ begin
         wait for 10 ns;
         s_start_i <= '0';
         wait for 90 ns;
-    end process p_sim;
 
+        -- Undefined operation (error)
+        s_op1_i <= X"000";
+        s_op2_i <= X"000";
+        s_optype_i <= "1111";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        ------------------------------------------------------------------------
+        -- Go through all operations with min values
+        ------------------------------------------------------------------------
+        s_op1_i <= X"000";
+        s_op2_i <= X"000";
+
+        -- Operation ADD
+        s_optype_i <= "0000";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation Square Root
+        s_optype_i <= "0110";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation NOT
+        s_optype_i <= "1000";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation XOR
+        s_optype_i <= "1011";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        ------------------------------------------------------------------------
+        -- Go through all operations with max values
+        ------------------------------------------------------------------------
+        s_op1_i <= X"FFF";
+        s_op2_i <= X"FFF";
+
+        -- Operation ADD
+        s_optype_i <= "0000";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation Square Root
+        s_optype_i <= "0110";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation NOT
+        s_optype_i <= "1000";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        -- Operation XOR
+        s_optype_i <= "1011";
+        s_start_i <= '1';
+        wait for 10 ns;
+        s_start_i <= '0';
+        wait for 90 ns;
+
+        wait;
+    end process p_sim;
 end sim;
