@@ -3,7 +3,7 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate /tb_calc_ctrl/s_reset_i
 add wave -noupdate /tb_calc_ctrl/s_clk_i
 add wave -noupdate /tb_calc_ctrl/s_swsync_i
-add wave -noupdate /tb_calc_ctrl/s_pbsync_i
+add wave -noupdate -expand /tb_calc_ctrl/s_pbsync_i
 add wave -noupdate /tb_calc_ctrl/s_finished_i
 add wave -noupdate -radix hexadecimal /tb_calc_ctrl/s_result_i
 add wave -noupdate /tb_calc_ctrl/s_sign_i
@@ -25,7 +25,7 @@ add wave -noupdate /tb_calc_ctrl/u_sim/s_dig3
 add wave -noupdate -radix hexadecimal /tb_calc_ctrl/s_led_o
 add wave -noupdate /tb_calc_ctrl/u_sim/s_state
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {283 ns} 0}
+WaveRestoreCursors {{Cursor 1} {589 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 176
 configure wave -valuecolwidth 100
@@ -41,4 +41,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {1050 ns}
+WaveRestoreZoom {0 ns} {2205 ns}

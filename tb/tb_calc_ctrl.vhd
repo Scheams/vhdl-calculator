@@ -241,7 +241,7 @@ begin
         s_pbsync_i(2) <= '1';
         wait for 50 ns;
         s_pbsync_i(2) <= '0';
-        s_swsync_i(15 downto 12) <= "1011";
+        s_swsync_i(15 downto 12) <= "1111";
 
         -- BTND press, execute operation
         wait for 50 ns;
