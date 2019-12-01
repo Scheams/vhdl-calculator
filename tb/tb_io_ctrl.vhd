@@ -1,3 +1,24 @@
+--------------------------------------------------------------------------------
+-- Author:      Christoph Amon
+--
+-- Created:     01.12.2019
+--
+-- Unit:        IO Control Unit (Testbench)
+--
+-- Version:
+--      -) Version 1.0.0
+--
+-- Changelog:
+--      -) Version 1.0.0 (01.12.2019)
+--         First implementation of IO Control Unit testbench.
+--
+-- Description:
+--      Check if the IO Control Unit debounces the buttons and switches with a
+--      lower frequency than the system clock. Furthermore, check if the LED
+--      signals are looped through. Change the signals on the the digits and
+--      verfiy that the unit hops through all the digts with the select line.
+--------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -17,13 +38,13 @@ architecture sim of tb_io_ctrl is
             led_i   : in std_logic_vector (15 downto 0);
             sw_i    : in std_logic_vector (15 downto 0);
             pb_i    : in std_logic_vector ( 3 downto 0);
-    
+
             ss_o        : out std_logic_vector( 7 downto 0);
             ss_sel_o    : out std_logic_vector( 3 downto 0);
             led_o       : out std_logic_vector(15 downto 0);
             swsync_o    : out std_logic_vector(15 downto 0);
             pbsync_o    : out std_logic_vector( 3 downto 0)
-        );    
+        );
     end component;
 
     signal s_clk_i   : std_logic;
@@ -35,7 +56,7 @@ architecture sim of tb_io_ctrl is
     signal s_led_i   : std_logic_vector (15 downto 0);
     signal s_sw_i    : std_logic_vector (15 downto 0);
     signal s_pb_i    : std_logic_vector ( 3 downto 0);
-    
+
     signal s_ss_o        : std_logic_vector( 7 downto 0);
     signal s_ss_sel_o    : std_logic_vector( 3 downto 0);
     signal s_led_o       : std_logic_vector(15 downto 0);
@@ -46,23 +67,26 @@ begin
 
     u_sim: io_ctrl
     port map (
-        clk_i   => s_clk_i,  
+        clk_i   => s_clk_i,
         reset_i => s_reset_i,
-        dig0_i  => s_dig0_i, 
-        dig1_i  => s_dig1_i, 
-        dig2_i  => s_dig2_i, 
-        dig3_i  => s_dig3_i, 
-        led_i   => s_led_i,  
-        sw_i    => s_sw_i,   
-        pb_i    => s_pb_i,   
+        dig0_i  => s_dig0_i,
+        dig1_i  => s_dig1_i,
+        dig2_i  => s_dig2_i,
+        dig3_i  => s_dig3_i,
+        led_i   => s_led_i,
+        sw_i    => s_sw_i,
+        pb_i    => s_pb_i,
 
         ss_o        => s_ss_o,
         ss_sel_o    => s_ss_sel_o,
-        led_o       => s_led_o,   
+        led_o       => s_led_o,
         swsync_o    => s_swsync_o,
         pbsync_o    => s_pbsync_o
     );
 
+    ----------------------------------------------------------------------------
+    -- Create a reset pulse
+    ----------------------------------------------------------------------------
     p_reset: process
     begin
         s_reset_i <= '1';
@@ -71,6 +95,9 @@ begin
         wait;
     end process p_reset;
 
+    ----------------------------------------------------------------------------
+    -- Create a 100MHz clock
+    ----------------------------------------------------------------------------
     p_clk: process
     begin
         s_clk_i <= '1';
@@ -79,6 +106,9 @@ begin
         wait for 5 ns;
     end process p_clk;
 
+    ----------------------------------------------------------------------------
+    -- Simulate push buttons and check if they are debounced
+    ----------------------------------------------------------------------------
     p_pb: process
     begin
         s_pb_i <= "0000";
@@ -97,6 +127,9 @@ begin
         wait;
     end process p_pb;
 
+    ----------------------------------------------------------------------------
+    -- Simulate switches and check if they are debounced
+    ----------------------------------------------------------------------------
     p_sw: process
     begin
         s_sw_i <= X"0000";
@@ -113,7 +146,10 @@ begin
         wait;
     end process p_sw;
 
-    p_led: process 
+    ----------------------------------------------------------------------------
+    -- Simulate LEDs turn on or off
+    ----------------------------------------------------------------------------
+    p_led: process
     begin
         s_led_i <= X"0000";
         wait for 1 ms;
@@ -125,6 +161,10 @@ begin
         wait;
     end process p_led;
 
+    ----------------------------------------------------------------------------
+    -- Simulate raw values on the digits and check if they are displayed
+    -- one after another.
+    ----------------------------------------------------------------------------
     p_dig: process
     begin
         s_dig0_i <= "11111111";
