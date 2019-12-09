@@ -2,8 +2,8 @@
 # Vivado v2019.2 (64-bit)
 # SW Build 2708876 on Wed Nov  6 21:40:23 MST 2019
 # IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
-# Start of session at: Sun Dec  1 16:16:09 2019
-# Process ID: 1832
+# Start of session at: Mon Dec  9 08:15:31 2019
+# Process ID: 14524
 # Current directory: C:/technikum/dse/calculator/impl/Calculator.runs/impl_1
 # Command line: vivado.exe -log calc.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source calc.tcl -notrace
 # Log file: C:/technikum/dse/calculator/impl/Calculator.runs/impl_1/calc.vdi

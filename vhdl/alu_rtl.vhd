@@ -221,7 +221,11 @@ begin
             s_xor_result <= (others => '0');
         elsif clk_i'event and clk_i = '1' then
             s_xor_finished <= '0';
+<<<<<<< HEAD
             if start_i = '1' then
+=======
+            elsif start_i = '1' then
+>>>>>>> 785b8bb1bef058a089c926ba6eac0cdc202b54cc
                 s_xor_result <= "0000" & (op1_i xor op2_i);
                 s_xor_running <= '1';
             elsif s_xor_running = '1' then
