@@ -13,6 +13,8 @@
 --         First implementation of ALU architecture.
 --      -) Version 1.0.1 (01.12.2019)
 --         Add process for error handling that also generates a finished pulse.
+--      -) Version 1.0.2 (05.12.2019)
+--         Improvement of process readability.
 --
 -- Description:
 --      The ALU can perform different kind of operations such as add, square
@@ -119,27 +121,23 @@ begin
     ----------------------------------------------------------------------------
     p_add: process(clk_i, reset_i)
     begin
+        s_add_sign <= '0';
+        s_add_overflow <= '0';
+        s_add_error <= '0';
+
         if reset_i = '1' then
+            s_add_running <= '0';
             s_add_finished <= '0';
             s_add_result <= (others => '0');
-            s_add_sign <= '0';
-            s_add_overflow <= '0';
-            s_add_error <= '0';
-            s_add_running <= '0';
         elsif clk_i'event and clk_i = '1' then
-            if s_add_running = '1' then
-                s_add_finished <= '1';
-                s_add_running <= '0';
-            elsif start_i = '1' then
+            s_add_finished <= '0';
+            if start_i = '1' then
                 s_add_result <= std_logic_vector(unsigned("0000" & op1_i) +
                     unsigned("0000" & op2_i));
-                s_add_sign <= '0';
-                s_add_overflow <= '0';
-                s_add_error <= '0';
-                s_add_finished <= '0';
                 s_add_running <= '1';
-            else
-                s_add_finished <= '0';
+            elsif s_add_running = '1' then
+                s_add_finished <= '1';
+                s_add_running <= '0';
             end if;
         end if;
     end process p_add;
@@ -148,42 +146,38 @@ begin
     -- Process for square root operation
     ----------------------------------------------------------------------------
     p_sqr: process(clk_i, reset_i)
-        variable value   : integer;
-        variable sub     : integer;
-        variable counter : natural;
+        variable v_value   : integer;
+        variable v_sub     : integer;
+        variable v_counter : natural;
     begin
+        s_sqr_sign <= '0';
+        s_sqr_overflow <= '0';
+        s_sqr_error <= '0';
+
         if reset_i = '1' then
+            v_value := 0;
+            v_sub := 0;
+            v_counter := 0;
+            s_sqr_running <= '0';
             s_sqr_finished <= '0';
             s_sqr_result <= (others => '0');
-            s_sqr_sign <= '0';
-            s_sqr_overflow <= '0';
-            s_sqr_error <= '0';
-            s_sqr_running <= '0';
-            value := 0;
-            sub := 0;
-            counter := 0;
         elsif clk_i'event and clk_i = '1' then
-            if s_sqr_running = '1' then
-                value := value - sub;
-                if value < 0 then
-                    s_sqr_result <= std_logic_vector(to_unsigned(counter, 16));
-                    s_sqr_sign <= '0';
-                    s_sqr_overflow <= '0';
-                    s_sqr_error <= '0';
-                    s_sqr_running <= '0';
-                    s_sqr_finished <= '1';
-                else
-                    sub := sub + 2;
-                    counter := counter + 1;
-                end if;
-            elsif start_i = '1' and optype_i = "0110" then
-                value := to_integer(unsigned(op1_i));
-                sub := 1;
-                counter := 0;
+            s_sqr_finished <= '0';
+            if start_i = '1' then
+                v_value := to_integer(unsigned(op1_i));
+                v_sub := 1;
+                v_counter := 0;
                 s_sqr_running <= '1';
-                s_sqr_finished <= '0';
-            else
-                s_sqr_finished <= '0';
+            elsif s_sqr_running = '1' then
+                v_value := v_value - v_sub;
+                if v_value < 0 then
+                    s_sqr_result <= std_logic_vector(to_unsigned(v_counter, 16));
+                    s_sqr_finished <= '1';
+                    s_sqr_running <= '0';
+                else
+                    v_sub := v_sub + 2;
+                    v_counter := v_counter + 1;
+                end if;
             end if;
         end if;
     end process p_sqr;
@@ -193,26 +187,22 @@ begin
     ----------------------------------------------------------------------------
     p_not: process(clk_i, reset_i)
     begin
+        s_not_sign <= '0';
+        s_not_overflow <= '0';
+        s_not_error <= '0';
+
         if reset_i = '1' then
+            s_not_running <= '0';
             s_not_finished <= '0';
             s_not_result <= (others => '0');
-            s_not_sign <= '0';
-            s_not_overflow <= '0';
-            s_not_error <= '0';
-            s_not_running <= '0';
         elsif clk_i'event and clk_i = '1' then
-            if s_not_running = '1' then
+            s_not_finished <= '0';
+            if start_i = '1' then
+                s_not_result <= "0000" & (not op1_i);
+                s_not_running <= '1';
+            elsif s_not_running = '1' then
                 s_not_finished <= '1';
                 s_not_running <= '0';
-            elsif start_i = '1' then
-                s_not_result <= "0000" & (not op1_i);
-                s_not_sign <= '0';
-                s_not_overflow <= '0';
-                s_not_error <= '0';
-                s_not_finished <= '0';
-                s_not_running <= '1';
-            else
-                s_not_finished <= '0';
             end if;
         end if;
     end process p_not;
@@ -222,26 +212,21 @@ begin
     ----------------------------------------------------------------------------
     p_xor: process(clk_i, reset_i)
     begin
+        s_xor_sign <= '0';
+        s_xor_overflow <= '0';
+        s_xor_error <= '0';
         if reset_i = '1' then
+            s_xor_running <= '0';
             s_xor_finished <= '0';
             s_xor_result <= (others => '0');
-            s_xor_sign <= '0';
-            s_xor_overflow <= '0';
-            s_xor_error <= '0';
-            s_xor_running <= '0';
         elsif clk_i'event and clk_i = '1' then
-            if s_xor_running = '1' then
-                s_xor_running <= '0';
-                s_xor_finished <= '1';
+            s_xor_finished <= '0';
             elsif start_i = '1' then
                 s_xor_result <= "0000" & (op1_i xor op2_i);
-                s_xor_sign <= '0';
-                s_xor_overflow <= '0';
-                s_xor_error <= '0';
-                s_xor_finished <= '0';
                 s_xor_running <= '1';
-            else
-                s_xor_finished <= '0';
+            elsif s_xor_running = '1' then
+                s_xor_finished <= '1';
+                s_xor_running <= '0';
             end if;
         end if;
     end process p_xor;
@@ -255,14 +240,12 @@ begin
             s_err_running <= '0';
             s_err_finished <= '0';
         elsif clk_i'event and clk_i = '1' then
-            if s_err_running = '1' then
-                s_err_running <= '0';
-                s_err_finished <= '1';
-            elsif start_i = '1' then
+            s_err_finished <= '0';
+            if start_i = '1' then
                 s_err_running <= '1';
-                s_err_finished <= '0';
-            else
-                s_err_finished <= '0';
+            elsif s_err_running = '1' then
+                s_err_finished <= '1';
+                s_err_running <= '0';
             end if;
         end if;
     end process p_err;
